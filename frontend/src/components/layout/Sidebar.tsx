@@ -8,15 +8,21 @@ import {
   FileText, 
   Settings, 
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  LifeBuoy
 } from 'lucide-react';
 import './Sidebar.css';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       <div className="sidebar-brand">
         <div className="brand-icon-wrapper">
           <Car size={24} className="brand-icon" />
@@ -31,6 +37,7 @@ export const Sidebar: React.FC = () => {
         <NavLink 
           to="/" 
           className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
+          onClick={onClose}
         >
           <LayoutDashboard size={20} />
           <span>Dashboard</span>
@@ -40,6 +47,7 @@ export const Sidebar: React.FC = () => {
           <NavLink 
             to="/usuarios" 
             className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
+            onClick={onClose}
           >
             <Users size={20} />
             <span>Usuarios</span>
@@ -49,6 +57,7 @@ export const Sidebar: React.FC = () => {
         <NavLink 
           to="/vehiculos" 
           className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
+          onClick={onClose}
         >
           <Car size={20} />
           <span>Vehículos</span>
@@ -57,6 +66,7 @@ export const Sidebar: React.FC = () => {
         <NavLink 
           to="/contratos" 
           className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
+          onClick={onClose}
         >
           <FileText size={20} />
           <span>Contratos</span>
@@ -65,9 +75,19 @@ export const Sidebar: React.FC = () => {
         <NavLink 
           to="/configuracion" 
           className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
+          onClick={onClose}
         >
           <Settings size={20} />
           <span>Configuración</span>
+        </NavLink>
+
+        <NavLink 
+          to="/soporte" 
+          className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
+          onClick={onClose}
+        >
+          <LifeBuoy size={20} />
+          <span>Soporte</span>
         </NavLink>
       </nav>
 

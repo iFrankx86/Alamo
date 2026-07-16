@@ -1,336 +1,100 @@
-# 🏢 ALAMO - Sistema de Gestión de Asistencia
+# 🏢 ÁLAMO - Sistema de Alquiler de Vehículos (Premium Car Rental)
 
-**Versión:** 1.0  
-**Estado:** Proyecto Consolidado y Reorganizado  
-**Tecnología:** Java 11+ | Spring Boot | MySQL | Thymeleaf | HTML/CSS/JS
+**Versión:** 2.0  
+**Estado:** Proyecto Consolidado, Responsivo y Completamente Funcional  
+**Tecnología:** Java 21 | Spring Boot 3.4.1 | React 18 | TypeScript | Vite | MySQL | Docker
 
 ---
 
 ## 📋 Descripción General
 
-**ALAMO** es una aplicación web completa de **gestión de asistencia y recursos humanos** que permite:
+**ÁLAMO** es un sistema web premium diseñado para la gestión integral de alquileres de vehículos. Cuenta con un diseño Glassmorphism responsivo para celulares y escritorio, analíticas gráficas dinámicas y lógica de negocios automatizada en el backend.
 
-✅ **Gestión de Usuarios** - Registro, roles, permisos  
-✅ **Control de Asistencia** - Registro de entrada/salida, auditoría  
-✅ **Administración de Tareas** - Asignación, seguimiento, reportes  
-✅ **Gestión de Horarios** - Turnos, disponibilidad  
-✅ **Inventario** - Productos y servicios  
-✅ **Informes y Reportes** - Generación de reportes en Excel  
-✅ **Sistema de Contactos** - CRM básico con etiquetado  
-✅ **Permisos Especiales** - Ausencias, permisos extra  
-✅ **Dashboard** - Vistas consolidadas y KPIs  
+### Características Clave:
+* **📊 Analíticas & KPI Dashboard:** Gráficos interactivos de facturación mensual e histórico de flota por categoría utilizando `recharts`.
+* **📑 Gestión de Contratos de Alquiler:** Registro y edición dinámica de alquileres, con asignación de seguros, horarios, servicios adicionales y cálculo automático de montos diarios.
+* **🔍 Filtro de Disponibilidad de Autos:** Algoritmo en base de datos que detecta traslapes de reservas para excluir autos ya rentados en las fechas ingresadas.
+* **🔔 Mesa de Notificaciones en Tiempo Real:** Alertas instantáneas y registro en la base de datos ante creación, edición o eliminación de cualquier entidad.
+* **🛠️ Incidencias & Soporte:** Panel de control de incidencias (Tickets de soporte) para los clientes, con panel de purga de incidencias para administradores.
+* **👥 Gestión de Usuarios y Flota:** CRUDs detallados con insignias dinámicas para tipos de licencias, placas de vehículos y roles del sistema.
+* **📥 Reportes Multi-Formato:** Descarga instantánea de reportes de contratos en formato Excel y PDF.
 
 ---
 
-## 🏗️ Estructura del Proyecto
+## 🏗️ Estructura del Repositorio
 
 ```
-alamo/
-├── src/
+alamo-proyecto/
+├── src/                                 # CÓDIGO DEL BACKEND (SPRING BOOT)
 │   ├── main/
-│   │   ├── java/com/alamo/asistencia/
-│   │   │   ├── 📁 config/                  # Configuración de Spring (beans, properties)
-│   │   │   ├── 📁 filter/                  # Filtros de seguridad y autenticación
-│   │   │   ├── 📁 model/                   # Entidades JPA (Usuario, Asistencia, etc.)
-│   │   │   ├── 📁 dto/                     # Data Transfer Objects
-│   │   │   ├── 📁 repository/              # Interfaces de acceso a datos
-│   │   │   ├── 📁 service/                 # Lógica de negocio
-│   │   │   ├── 📁 controller/              # Controladores REST/MVC
-│   │   │   ├── 📁 exception/               # Excepciones personalizadas
-│   │   │   ├── 📁 util/                    # Clases utilitarias
-│   │   │   └── AsistenciaAlamoApplication.java  # Clase principal
-│   │   │
+│   │   ├── java/com/alamo/alquiler/
+│   │   │   ├── 📁 controller/          # Endpoints REST (Contratos, Notificaciones, Analíticas)
+│   │   │   ├── 📁 model/               # Entidades JPA (Vehiculo, Usuario, ContratoAlquiler)
+│   │   │   ├── 📁 repository/          # Consultas JPA y algoritmos SQL
+│   │   │   ├── 📁 service/             # Lógica transaccional de negocio
+│   │   │   └── AlamoAlquilerApplication.java
 │   │   └── resources/
-│   │       ├── application.properties      # Propiedades de la aplicación
-│   │       ├── 📁 static/                  # Recursos estáticos
-│   │       │   ├── css/                    # Hojas de estilo
-│   │       │   ├── js/                     # Scripts JavaScript
-│   │       │   ├── img/                    # Imágenes
-│   │       │   └── index.html              # Página de inicio
-│   │       └── 📁 templates/               # Templates Thymeleaf
-│   │           ├── login.html              # Login
-│   │           ├── menu.html               # Menú principal
-│   │           ├── perfil.html             # Perfil de usuario
-│   │           ├── usuarios.html           # Gestión de usuarios
-│   │           ├── asignartareas.html      # Asignación de tareas
-│   │           ├── mistareas.html          # Mis tareas
-│   │           ├── agenda.html             # Agenda
-│   │           ├── reportes.html           # Reportes
-│   │           ├── informes.html           # Informes
-│   │           ├── Horarios.html           # Gestión de horarios
-│   │           ├── listarproductos.html    # Inventario
-│   │           ├── fragmentos/
-│   │           │   └── sidebar.html        # Componente reutilizable
-│   │           └── ... (otros templates)
-│   │
-│   └── test/                               # Tests unitarios e integración
-│       └── java/com/alamo/asistencia/
+│   │       └── application.properties   # Configuración de base de datos
+│   └── test/                            # Suite de Pruebas Unitarias (14 Tests JUnit)
 │
-├── docker/                                 # Configuración Docker
-│   ├── Dockerfile                          # Imagen de la aplicación
-│   └── docker-compose.yml                  # Orquestación MySQL + App
+├── frontend/                            # CÓDIGO DEL FRONTEND (REACT + TS)
+│   ├── src/
+│   │   ├── 📁 components/               # Layout responsivo (Navbar, Sidebar)
+│   │   ├── 📁 pages/                    # Vistas (Dashboard, Contratos, Soporte, Usuarios)
+│   │   └── 📁 services/                 # Clientes API Axios
+│   ├── package.json
+│   └── vite.config.ts
 │
-├── database/                               # Scripts de base de datos
-│   └── *.sql                               # Esquemas, backups, migraciones
+├── docker/                              # CONFIGURACIÓN DOCKER
+│   └── docker-compose.yml               # Orquestación MySQL local
 │
-├── docs/                                   # Documentación del proyecto
-│   ├── README_ORGANIZACION.md              # Guía de organización
-│   ├── QUICK_START.md                      # Inicio rápido
-│   ├── INTEGRACION.md                      # Guía de integración
-│   ├── GUIA_GIT.md                         # Workflow Git
-│   └── ... (otros documentos)
-│
-├── pom.xml                                 # Configuración Maven
-└── README.md                               # Este archivo
-
+└── docs/                                # DOCUMENTACIÓN TÉCNICA CENTRAL
+    ├── README.md                        # Índice de documentación
+    ├── RENTACAR_ARQUITECTURA.md         # Modelo Entidad-Relación y de datos
+    ├── manual_desarrollador.md          # Guía técnica para desarrolladores
+    └── manual_usuario.md                # Guía de uso de la interfaz
 ```
 
 ---
 
-## 🗂️ Capas de la Aplicación
+## 🛠️ Guía de Inicio Rápido
 
-### **1. Capa de Presentación (Frontend)**
-- **Ubicación:** `src/main/resources/templates/` y `src/main/resources/static/`
-- **Tecnología:** HTML, CSS, JavaScript, Thymeleaf
-- **Responsabilidades:** 
-  - Interfaces de usuario
-  - Formularios interactivos
-  - Reportes visuales
+### 1. Requisitos Previos
+* Java JDK 21
+* Node.js v18+ (con npm)
+* MySQL Server o Docker Desktop
 
-### **2. Capa de Controladores (REST/MVC)**
-- **Ubicación:** `src/main/java/.../controller/`
-- **Ejemplos:** `UsuarioController.java`, `AsistenciaController.java`
-- **Responsabilidades:** 
-  - Rutas HTTP
-  - Validación de entrada
-  - Comunicación con servicios
-
-### **3. Capa de Servicios (Lógica de Negocio)**
-- **Ubicación:** `src/main/java/.../service/`
-- **Ejemplos:** `UsuarioService.java`, `AsistenciaService.java`
-- **Responsabilidades:**
-  - Lógica de negocio
-  - Orquestación de operaciones
-  - Transformación de datos
-
-### **4. Capa de Datos (Persistencia)**
-- **Ubicación:** `src/main/java/.../repository/`, `model/`, `dto/`
-- **Responsabilidades:**
-  - Acceso a base de datos
-  - Consultas optimizadas
-  - Mapeo ORM con JPA
-
-### **5. Capa de Configuración**
-- **Ubicación:** `src/main/java/.../config/`
-- **Responsabilidades:**
-  - Beans de Spring
-  - Configuración CORS
-  - Configuración de seguridad
-
----
-
-## 📊 Entidades Principales
-
-| Entidad | Descripción |
-|---------|-------------|
-| **Usuario** | Usuarios del sistema con roles |
-| **Asistencia** | Registros de entrada/salida |
-| **AsistenciaAudit** | Auditoría de cambios |
-| **Tarea** | Tareas asignadas a usuarios |
-| **Horario** | Horarios de trabajo |
-| **Informe** | Informes generados |
-| **Contacto** | Directorio de contactos |
-| **Producto** | Inventario de productos |
-| **Servicio** | Servicios ofrecidos |
-| **Permiso Extra** | Permisos especiales |
-| **Rol** | Roles y permisos |
-| **Etiqueta** | Etiquetas para clasificar |
-
----
-
-## 🚀 Inicio Rápido
-
-### Prerequisitos
-- Java 11 o superior
-- Maven 3.6+
-- MySQL 5.7+
-- Docker (opcional)
-
-### Instalación Local
-
+### 2. Levantar la Base de Datos (Docker)
+Si dispones de Docker, puedes levantar la base de datos localmente ejecutando:
 ```bash
-# 1. Clonar el repositorio
-git clone <repo-url>
-cd alamo
+docker-compose -f docker/docker-compose.yml up -d
+```
 
-# 2. Construir el proyecto
-mvn clean install
-
-# 3. Configurar la base de datos
-# Editar src/main/resources/application.properties
-# Establecer credenciales de MySQL
-
-# 4. Ejecutar la aplicación
+### 3. Ejecutar el Backend (Spring Boot)
+Desde la raíz del proyecto:
+```bash
 mvn spring-boot:run
-
-# 5. Acceder a la aplicación
-# http://localhost:8080
 ```
+El servidor backend se iniciará en `http://localhost:8080`.
 
-### Con Docker
-
+### 4. Ejecutar el Frontend (React)
+Navega al directorio `/frontend`, instala las dependencias y corre el servidor de desarrollo:
 ```bash
-# Construir y ejecutar con docker-compose
-cd docker
-docker-compose up -d
-
-# Acceder a la aplicación
-# http://localhost:8080
+cd frontend
+npm install
+npm run dev
 ```
+La aplicación web se abrirá en `http://localhost:5173`.
 
 ---
 
-## 🔧 Configuración
-
-### application.properties
-
-```properties
-# Base de datos
-spring.datasource.url=jdbc:mysql://localhost:3306/asistencia_alamo
-spring.datasource.username=root
-spring.datasource.password=password
-spring.jpa.hibernate.ddl-auto=update
-
-# Puerto
-server.port=8080
-
-# Thymeleaf
-spring.thymeleaf.cache=false
-```
-
----
-
-## 📦 Dependencias Principales
-
-```xml
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-jpa</artifactId>
-</dependency>
-<dependency>
-    <groupId>mysql</groupId>
-    <artifactId>mysql-connector-java</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-thymeleaf</artifactId>
-</dependency>
-```
-
----
-
-## 📝 Workflow de Desarrollo
-
-### Crear una Nueva Funcionalidad
-
-1. **Modelo (JPA Entity)**
-   ```
-   src/main/java/.../model/MiEntidad.java
-   ```
-
-2. **Repositorio**
-   ```
-   src/main/java/.../repository/IMiEntidadRepository.java
-   ```
-
-3. **DTO** (si es necesario)
-   ```
-   src/main/java/.../dto/MiEntidadDTO.java
-   ```
-
-4. **Servicio**
-   ```
-   src/main/java/.../service/MiEntidadService.java
-   ```
-
-5. **Controlador**
-   ```
-   src/main/java/.../controller/MiEntidadController.java
-   ```
-
-6. **Template/Vistas**
-   ```
-   src/main/resources/templates/mientidad.html
-   ```
-
----
-
-## 🐛 Solución de Problemas
-
-### Puerto 8080 en uso
+## 🧪 Pruebas Unitarias
+El backend cuenta con tests JUnit que garantizan la estabilidad del sistema:
 ```bash
-# Cambiar en application.properties
-server.port=8081
-```
-
-### Error de conexión a BD
-```bash
-# Verificar credenciales en application.properties
-# Asegurar que MySQL está corriendo
-mysql -u root -p
-```
-
-### Limpiar caché de Maven
-```bash
-mvn clean
-rm -rf ~/.m2/repository
-mvn install
+mvn test
 ```
 
 ---
 
-## 👥 Contribuyentes
-
-- **Parte 1 (Infraestructura):** Integrante 1
-- **Parte 2 (Base de Datos):** Integrante 2
-- **Parte 3 (Backend):** Integrante 3
-- **Parte 4 (Frontend):** Integrante 4
-
----
-
-## 📚 Documentación Adicional
-
-Consulta la carpeta `docs/` para:
-- `QUICK_START.md` - Inicio rápido
-- `README_ORGANIZACION.md` - Detalles de organización
-- `INTEGRACION.md` - Integración de componentes
-- `GUIA_GIT.md` - Workflow Git
-
----
-
-## 📄 Licencia
-
-Proyecto educativo de ALAMO
-
----
-
-## ✨ Cambios Recientes (Reorganización)
-
-**Consolidación en estructura Maven estándar:**
-- ✅ Unificación de 4 partes separadas en un único proyecto
-- ✅ Estructura clara por capas
-- ✅ Separación de responsabilidades mejorada
-- ✅ Mejor mantenibilidad del código
-- ✅ Facilita CI/CD e integración
-
-**Nuevas carpetas:**
-- `docker/` - Configuración de contenedores
-- `database/` - Scripts SQL
-- `docs/` - Documentación centralizada
-- `exception/` - Excepciones personalizadas
-- `util/` - Clases utilitarias
-
+## 📄 Licencia y Autores
+Proyecto académico universitario consolidado para **Álamo Rent-A-Car**. Todos los derechos reservados.

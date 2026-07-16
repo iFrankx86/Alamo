@@ -15,6 +15,13 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import './Dashboard.css';
+import api from '../services/api';
+import { 
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Cell
+} from 'recharts';
+
+const COLORS = ['#6366f1', '#10b981', '#a855f7', '#f59e0b'];
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -29,6 +36,13 @@ export const Dashboard: React.FC = () => {
   });
   const [recentContratos, setRecentContratos] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Estados de Analítica
+  const [analytics, setAnalytics] = useState<any>({
+    facturacionMensual: [],
+    distribucionCategorias: []
+  });
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -48,7 +62,6 @@ export const Dashboard: React.FC = () => {
           ingresos: totalIngresos,
         });
 
-        // Ordenamos los contratos por id de forma descendente para simular "recientes"
         const sorted = [...contratos].sort((a, b) => (b.idContrato || 0) - (a.idContrato || 0));
         setRecentContratos(sorted.slice(0, 5));
       } catch (e) {
@@ -58,7 +71,19 @@ export const Dashboard: React.FC = () => {
       }
     };
 
+    const fetchAnalytics = async () => {
+      try {
+        const response = await api.get('/analiticas/dashboard');
+        setAnalytics(response.data);
+      } catch (e) {
+        console.error("Error al cargar analíticas", e);
+      } finally {
+        setIsLoadingAnalytics(false);
+      }
+    };
+
     fetchStats();
+    fetchAnalytics();
   }, []);
 
   return (
@@ -116,6 +141,67 @@ export const Dashboard: React.FC = () => {
               {isLoading ? '...' : `S/. ${stats.ingresos.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`}
             </h3>
           </div>
+        </div>
+      </div>
+
+      {/* Sección de Gráficos Analíticos */}
+      <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+        <div className="analytics-card card" style={{ padding: '20px' }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <TrendingUp size={18} style={{ color: '#10b981' }} />
+            <span>Facturación Mensual (S/.)</span>
+          </h3>
+          {isLoadingAnalytics ? (
+            <div className="loader-container" style={{ height: '250px' }}><div className="spinner"></div></div>
+          ) : (
+            <div style={{ width: '100%', height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={analytics.facturacionMensual}>
+                  <defs>
+                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="mes" stroke="var(--text-secondary)" fontSize={11} tickLine={false} />
+                  <YAxis stroke="var(--text-secondary)" fontSize={11} tickLine={false} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                    labelStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
+                  />
+                  <Area type="monotone" dataKey="total" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
+        <div className="analytics-card card" style={{ padding: '20px' }}>
+          <h3 style={{ fontSize: '1rem', marginBottom: '15px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Car size={18} style={{ color: '#6366f1' }} />
+            <span>Flota por Categoría</span>
+          </h3>
+          {isLoadingAnalytics ? (
+            <div className="loader-container" style={{ height: '250px' }}><div className="spinner"></div></div>
+          ) : (
+            <div style={{ width: '100%', height: 250 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.distribucionCategorias}>
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={11} tickLine={false} />
+                  <YAxis stroke="var(--text-secondary)" fontSize={11} tickLine={false} allowDecimals={false} />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'var(--card-bg)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                    labelStyle={{ color: 'var(--text-primary)', fontWeight: 'bold' }}
+                  />
+                  <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]}>
+                    {analytics.distribucionCategorias.map((_: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       </div>
 

@@ -246,3 +246,44 @@
   color: var(--text-muted);
 }
 
+/* Hamburguer menu button */
+.menu-toggle-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--border-radius-sm);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-right: 12px;
+  transition: all var(--transition-fast);
+}
+
+.menu-toggle-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Responsividad para Header */
+@media (max-width: 768px) {
+  .menu-toggle-btn {
+    display: flex;
+  }
+  
+  .time-widget,
+  .status-widget {
+    display: none;
+  }
+
+  .navbar {
+    padding: 0 15px;
+  }
+  
+  .navbar-title {
+    font-size: 1.1rem;
+  }
+}
+

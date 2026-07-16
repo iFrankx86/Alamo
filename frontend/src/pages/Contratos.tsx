@@ -15,9 +15,12 @@ import {
   DollarSign,
   User,
   Car,
-  Trash2
+  Trash2,
+  Download,
+  Edit
 } from 'lucide-react';
 import './Contratos.css';
+import api from '../services/api';
 
 export const Contratos: React.FC = () => {
   const [contratos, setContratos] = useState<ContratoAlquiler[]>([]);
@@ -29,6 +32,7 @@ export const Contratos: React.FC = () => {
   const [contratosSeguro, setContratosSeguro] = useState<ContratoSeguro[]>([]);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -133,6 +137,67 @@ export const Contratos: React.FC = () => {
     setPrecioCalculado(subtotal);
   }, [formData, vehiculos, servicios]);
 
+  // Filtrar vehículos disponibles al cambiar fechas
+  useEffect(() => {
+    if (!formData.fechaInicio || !formData.fechaFin) return;
+    
+    let active = true;
+    const fetchDisponibles = async () => {
+      try {
+        const response = await api.get(`/vehiculos/disponibles?fechaInicio=${formData.fechaInicio}&fechaFin=${formData.fechaFin}`);
+        if (active) {
+          setVehiculos(response.data);
+          if (response.data.length > 0) {
+            const exists = response.data.some((v: any) => v.idVehiculo?.toString() === formData.idVehiculo);
+            if (!exists) {
+              setFormData(prev => ({
+                ...prev,
+                idVehiculo: response.data[0].idVehiculo?.toString() || ''
+              }));
+            }
+          } else {
+            setFormData(prev => ({
+              ...prev,
+              idVehiculo: ''
+            }));
+          }
+        }
+      } catch (e) {
+        console.error("Error al filtrar disponibilidad", e);
+      }
+    };
+
+    if (isModalOpen) {
+      fetchDisponibles();
+    }
+    return () => {
+      active = false;
+    };
+  }, [formData.fechaInicio, formData.fechaFin, isModalOpen]);
+
+  const handleDownload = async (format: 'excel' | 'pdf') => {
+    try {
+      const response = await api.get(`/reportes/contratos/${format}`, {
+        responseType: 'blob',
+      });
+      const blob = new Blob([response.data], {
+        type: format === 'excel' 
+          ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+          : 'application/pdf',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `reporte_contratos.${format === 'excel' ? 'xlsx' : 'pdf'}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error('Error al descargar el reporte', error);
+      alert('No se pudo descargar el reporte.');
+    }
+  };
+
   const handleOpenCreateModal = () => {
     if (usuarios.length === 0 || vehiculos.length === 0) {
       alert('Debes tener al menos un usuario (cliente) y un vehículo registrado para poder alquilar.');
@@ -148,6 +213,22 @@ export const Contratos: React.FC = () => {
       idHorario: horarios[0]?.idHorario?.toString() || '',
       idContratoSeguro: contratosSeguro[0]?.idContratoSeguro?.toString() || '',
       serviciosSeleccionados: [],
+    });
+    setSelectedContrato(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (contrato: ContratoAlquiler) => {
+    setSelectedContrato(contrato);
+    setFormData({
+      idCliente: contrato.cliente?.idUsuario?.toString() || '',
+      idVehiculo: contrato.vehiculo?.idVehiculo?.toString() || '',
+      fechaInicio: contrato.fechaInicio || '',
+      fechaFin: contrato.fechaFin || '',
+      idSeguro: contrato.seguro?.idSeguro?.toString() || '',
+      idHorario: contrato.horario?.idHorario?.toString() || '',
+      idContratoSeguro: contrato.contratoSeguro?.idContratoSeguro?.toString() || '',
+      serviciosSeleccionados: contrato.servicios?.map(s => s.idServicio || 0) || [],
     });
     setIsModalOpen(true);
   };
@@ -196,23 +277,28 @@ export const Contratos: React.FC = () => {
       return;
     }
 
-    const uniqueCode = `ALAMO-${Date.now().toString().slice(-6)}-${formData.idVehiculo}`;
+    const uniqueCode = selectedContrato ? selectedContrato.codigo : `ALAMO-${Date.now().toString().slice(-6)}-${formData.idVehiculo}`;
 
     const payload: ContratoAlquiler = {
+      idContrato: selectedContrato ? selectedContrato.idContrato : undefined,
       codigo: uniqueCode,
       fechaInicio: formData.fechaInicio,
       fechaFin: formData.fechaFin,
       montoTotal: precioCalculado,
       vehiculo: car,
       cliente: client,
-      seguro: ins,
-      horario: sched,
-      contratoSeguro: insContract,
+      seguro: ins || undefined,
+      horario: sched || undefined,
+      contratoSeguro: insContract || undefined,
       servicios: selectedServs,
     };
 
     try {
-      await contratoService.create(payload);
+      if (selectedContrato && selectedContrato.idContrato) {
+        await api.put(`/contratos-alquiler/${selectedContrato.idContrato}`, payload);
+      } else {
+        await contratoService.create(payload);
+      }
       setIsModalOpen(false);
       fetchDatos();
     } catch (err) {
@@ -223,12 +309,15 @@ export const Contratos: React.FC = () => {
 
   const filteredContratos = contratos.filter(c => {
     const term = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = (
       c.codigo.toLowerCase().includes(term) ||
       (c.cliente && c.cliente.nombres.toLowerCase().includes(term)) ||
+      (c.cliente && c.cliente.apellidoPaterno?.toLowerCase().includes(term)) ||
       (c.vehiculo && c.vehiculo.placa.toLowerCase().includes(term)) ||
       (c.vehiculo && c.vehiculo.marca.toLowerCase().includes(term))
     );
+    const matchesCategory = filterCategory === '' || (c.vehiculo?.categoria?.tipo === filterCategory);
+    return matchesSearch && matchesCategory;
   });
 
   return (
@@ -255,8 +344,8 @@ export const Contratos: React.FC = () => {
       )}
 
       {/* Filtros */}
-      <div className="table-filters card">
-        <div className="search-bar">
+      <div className="table-filters card" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        <div className="search-bar" style={{ flex: 1 }}>
           <Search size={18} className="search-icon" />
           <input
             type="text"
@@ -265,6 +354,31 @@ export const Contratos: React.FC = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+        
+        <div className="category-filter" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Categoría:</span>
+          <select
+            className="form-select"
+            style={{ width: '160px', padding: '6px 12px', fontSize: '0.85rem', height: '38px', borderRadius: 'var(--border-radius-sm)', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+            value={filterCategory}
+            onChange={(e) => setFilterCategory(e.target.value)}
+          >
+            <option value="">Todas</option>
+            <option value="ECONOMICO">Económico</option>
+            <option value="ESTANDAR">Estándar</option>
+            <option value="PREMIUM">Premium</option>
+          </select>
+        </div>
+        <div className="export-actions" style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+          <button className="btn btn-secondary" onClick={() => handleDownload('excel')} title="Exportar a Excel">
+            <Download size={16} />
+            <span>Excel</span>
+          </button>
+          <button className="btn btn-secondary" onClick={() => handleDownload('pdf')} title="Exportar a PDF">
+            <FileText size={16} />
+            <span>PDF</span>
+          </button>
         </div>
       </div>
 
@@ -289,6 +403,7 @@ export const Contratos: React.FC = () => {
                 <th>Inicio</th>
                 <th>Fin</th>
                 <th>Total</th>
+                <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -306,11 +421,33 @@ export const Contratos: React.FC = () => {
                   <td>{c.fechaInicio}</td>
                   <td>{c.fechaFin}</td>
                   <td className="price-td">S/. {Number(c.montoTotal).toFixed(2)}</td>
-                  <td className="actions-cell">
+                  <td>
+                    {c.estado === 'RESCINDIDO' ? (
+                      <span className="badge-danger" style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                        Rescindido
+                      </span>
+                    ) : (
+                      <span className="badge-success" style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600, backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                        Activo
+                      </span>
+                    )}
+                  </td>
+                  <td className="actions-cell" style={{ display: 'flex', gap: '8px' }}>
+                    <button 
+                      className="action-icon-btn edit" 
+                      style={{ color: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', border: 'none', padding: '6px', borderRadius: '4px', cursor: 'pointer', opacity: c.estado === 'RESCINDIDO' ? 0.5 : 1 }}
+                      onClick={() => handleOpenEditModal(c)}
+                      title="Editar Contrato"
+                      disabled={c.estado === 'RESCINDIDO'}
+                    >
+                      <Edit size={16} />
+                    </button>
                     <button 
                       className="action-icon-btn delete" 
+                      style={{ opacity: c.estado === 'RESCINDIDO' ? 0.5 : 1 }}
                       onClick={() => c.idContrato && handleDelete(c.idContrato)}
                       title="Rescindir Contrato"
+                      disabled={c.estado === 'RESCINDIDO'}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -327,7 +464,7 @@ export const Contratos: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal-content large fade-in">
             <div className="modal-header">
-              <h3>Registrar Contrato de Alquiler</h3>
+              <h3>{selectedContrato ? 'Editar Contrato de Alquiler' : 'Registrar Contrato de Alquiler'}</h3>
               <button className="modal-close" onClick={() => setIsModalOpen(false)}>
                 <X size={20} />
               </button>
@@ -550,6 +687,20 @@ export const Contratos: React.FC = () => {
               <div className="detail-total-box">
                 <span>Monto Total Cobrado</span>
                 <h3>S/. {Number(selectedContrato.montoTotal).toFixed(2)}</h3>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button 
+                  className="btn btn-primary" 
+                  onClick={() => {
+                    setIsDetailModalOpen(false);
+                    handleOpenEditModal(selectedContrato);
+                  }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                  <Edit size={16} />
+                  <span>Editar Contrato</span>
+                </button>
               </div>
             </div>
           </div>

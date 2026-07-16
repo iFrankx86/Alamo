@@ -1,137 +1,60 @@
-# 🎨 PARTE 4: FRONTEND Y INTERFAZ DE USUARIO
+# 📚 Documentación del Sistema — Álamo Rent-A-Car
 
-**Responsable:** Integrante 4
+Esta es la carpeta central de documentación del proyecto final para **Álamo Rent-A-Car**. Aquí encontrarás todas las guías y manuales técnicos y operativos del sistema estructurado bajo la arquitectura React (Frontend) y Spring Boot (Backend REST API).
 
-## Descripción
-Esta parte contiene toda la interfaz visual del usuario:
-- Templates HTML con Thymeleaf
-- Estilos CSS
-- JavaScript para interactividad
-- Imágenes y recursos estáticos
+---
 
-## Archivos Principales
+## 🗂️ Índice de Documentos Disponibles
 
-### Código Fuente
+### 🛠️ [Manual del Desarrollador (Guía Técnica)](file:///c:/Users/ASUS/OneDrive%20-%20Universidad%20Tecnologica%20del%20Peru/Documents/Proyecto%20Universidad/Alamo-1/docs/manual_desarrollador.md)
+* Guía de arquitectura de software desacoplada (SPA React + API Spring Boot).
+* Descripción del modelo de persistencia y controladores genéricos.
+* Explicación de la suite de pruebas unitarias (`JUnit 5` + `Mockito`) con mock de repositorios (`@MockitoBean`).
+* Configuración del pipeline de Integración Continua (CI/CD) con GitHub Actions.
+* Guía de despliegue dinámico en Vercel y Render con contenedores Docker.
+
+### 👤 [Manual del Usuario (Guía Operativa)](file:///c:/Users/ASUS/OneDrive%20-%20Universidad%20Tecnologica%20del%20Peru/Documents/Proyecto%20Universidad/Alamo-1/docs/manual_usuario.md)
+* Flujo de inicio de sesión y gestión basada en Roles (`ADMINISTRADOR` vs. `COUNTER`).
+* Uso del Dashboard operativo con KPIs comerciales en tiempo real.
+* Manual de registro y edición para la administración de colaboradores, vehículos y alquileres.
+* Funcionamiento del calculador dinámico de tarifas en el formulario de contratos de alquiler.
+* Instrucciones para descargar reportes consolidados en formatos **Excel** y **PDF**.
+* Uso de la mesa de soporte técnico integrado para reportar y resolver incidentes.
+### 📐 [Arquitectura de Datos y MER](file:///c:/Users/ASUS/OneDrive%20-%20Universidad%20Tecnologica%20del%20Peru/Documents/Proyecto%20Universidad/Alamo-1/docs/RENTACAR_ARQUITECTURA.md)
+* Modelo Entidad-Relación (MER lógico y físico) detallando las tablas físicas, llaves primarias, llaves foráneas y mapeos JPA de persistencia.
+
+---
+
+## ⚡ Guía de Inicio Rápido en Desarrollo Local
+
+### Requisitos Previos
+* Java JDK 21
+* Node.js v20 (con npm)
+* Docker Desktop (opcional, para base de datos local)
+* Maven 3.x
+
+### Paso 1: Levantar Base de Datos (Local)
+Si cuentas con Docker, inicia el contenedor PostgreSQL desde el directorio raíz:
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
 ```
-src/main/resources/templates/                # Templates HTML (Thymeleaf)
-├── login.html                               # Página de login
-├── menu.html                                # Menú principal
-├── perfil.html                              # Perfil de usuario
-├── usuarios.html                            # Gestión de usuarios
-├── asignartareas.html                       # Asignación de tareas
-├── mistareas.html                           # Mis tareas
-├── historialdia.html                        # Historial diario
-├── historialgeneral.html                    # Historial general
-├── agenda.html                              # Agenda
-├── reportes.html                            # Reportes
-├── informes.html                            # Informes
-├── listarproductos.html                     # Productos
-├── listarservicios.html                     # Servicios
-├── Horarios.html                            # Horarios
-├── registrar.html                           # Registro de usuarios
-├── contraseña.html                          # Cambiar contraseña
-├── mobile.html                              # Vista móvil
-└── fragmentos/
-    └── sidebar.html                         # Barra lateral reutilizable
+*Si prefieres base de datos física, asegúrate de ajustar las credenciales de puerto, usuario y contraseña en el archivo [application.properties](file:///c:/Users/ASUS/OneDrive%20-%20Universidad%20Tecnologica%20del%20Peru/Documents/Proyecto%20Universidad/Alamo-1/src/main/resources/application.properties).*
 
-src/main/resources/static/                   # Recursos estáticos
-├── index.html                               # Página de inicio
-├── css/
-│   └── asignartareas.css                    # Estilos CSS
-│   └── style.css                            # Estilos generales
-├── js/                                      # JavaScript
-│   └── (scripts de funcionalidad)
-└── img/                                     # Imágenes
+### Paso 2: Compilar y Ejecutar Pruebas Backend
+En la raíz del proyecto, ejecuta:
+```bash
+mvn clean test
 ```
-
-## Tareas Principales
-
-### ✅ Durante el desarrollo:
-1. Crear/actualizar templates HTML con Thymeleaf
-2. Diseñar estilos CSS responsivos
-3. Implementar funcionalidades con JavaScript
-4. Asegurar UX/UI consistente
-5. Optimizar para móvil
-6. Validaciones de cliente (JavaScript)
-
-### 📝 Convenciones Thymeleaf
-
-```html
-<!-- Expresiones -->
-<p th:text="${usuario.nombre}">Nombre</p>
-
-<!-- Iteraciones -->
-<tr th:each="usuario : ${usuarios}">
-    <td th:text="${usuario.nombre}"></td>
-</tr>
-
-<!-- Condicionales -->
-<div th:if="${usuario.activo}">
-    <p>Usuario activo</p>
-</div>
-
-<!-- Links -->
-<a th:href="@{/usuarios/{id}(id=${usuario.id})}">Ver</a>
-
-<!-- Formularios -->
-<form th:action="@{/usuarios}" th:object="${usuarioDTO}" method="post">
-    <input type="text" th:field="*{nombre}" />
-    <button type="submit">Guardar</button>
-</form>
+Para iniciar el servidor de Spring Boot (corre en `http://localhost:8080`):
+```bash
+mvn spring-boot:run
 ```
 
-### 🎨 Estructura CSS
-
-```css
-/* Variables y paleta */
-:root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --danger-color: #dc3545;
-}
-
-/* Componentes reutilizables */
-.btn { ... }
-.btn-primary { ... }
-.card { ... }
-.table { ... }
+### Paso 3: Iniciar el Cliente Frontend (React)
+Navega a la carpeta `frontend/`, instala dependencias e inicia el servidor de desarrollo:
+```bash
+cd frontend
+npm install
+npm run dev
 ```
-
-### 🔧 JavaScript - Funcionalidades Típicas
-
-```javascript
-// Validación de formularios
-document.getElementById('form').addEventListener('submit', function(e) {
-    if (!validateForm()) {
-        e.preventDefault();
-    }
-});
-
-// AJAX para acciones sin recargar
-fetch('/api/usuarios/' + id, { method: 'DELETE' })
-    .then(response => response.json())
-    .then(data => { /* actualizar UI */ });
-```
-
-## 📱 Responsive Design
-- Mobile-first approach
-- Breakpoints: 576px, 768px, 992px, 1200px
-- Usar Bootstrap o similar framework
-
-## Commits Esperados
-- `feat: create login and registration pages`
-- `feat: create main menu and navigation`
-- `feat: create usuario management UI`
-- `feat: create asistencia tracking UI`
-- `feat: add responsive CSS styling`
-- `feat: add JavaScript validations and interactivity`
-- `feat: create reportes and informes views`
-- `feat: create mobile-friendly layout`
-
-## Testing
-- Probar en diferentes navegadores
-- Probar responsividad (mobile, tablet, desktop)
-- Validar accesibilidad
-
-## Integración
-Ver [INTEGRACION.md](../INTEGRACION.md) en la raíz del proyecto.
+La aplicación se abrirá en `http://localhost:5173`.
